@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 7000;
 const neonjs = require('@cityofzion/neon-js')
 const Neon = neonjs.default
 const { tx } = Neon;
-const neoNodeURL = 'http://node2.sgp1.bridgeprotocol.io:10332'
+const neoNodeURL = process.env.NEO_NODE_URL
 const client = Neon.create.rpcClient(neoNodeURL)
 
 
