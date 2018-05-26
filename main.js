@@ -1,13 +1,22 @@
+/*
+ * Setup
+ */
+
 // Express
 const express = require('express')
 const app = express()
 const PORT = process.env.PORT || 7000;
 
+// Neo
 const neonjs = require('@cityofzion/neon-js')
 const Neon = neonjs.default
 const neoNodeURL = 'http://seed3.cityofzion.io:8080'
 const client = Neon.create.rpcClient(neoNodeURL)
 
+
+/*
+ * Routes
+ */
 
 app.get('/validate_address', async (req, res) => {
   try {
@@ -31,31 +40,36 @@ app.post('/test_invoke', async (req, res) => {
   const { scriptHash, operation, params } = req
 
   try {
-    await neo.mesh.rpc('invokeTransaction')
-      .then((resNeo) => res.status(200).json({ block_height: resNeo }))
+    const response = await client.invokeFunction(scriptHash, operation, params)
+    res.status(200).json({ response })
   } catch (e) {
-    console.log(e.toString());
+    res.status(500).json({ error: "Error processing request" })
   }
 })
 
 app.post('/send_transaction', async (req, res) => {
+  const { scriptHash, operation, params } = req
+
   try {
-    await neo.mesh.rpc('invokeTransaction')
-      .then((resNeo) => res.status(200).json({ block_height: resNeo }))
+    const response = await client.sendRawTransaction(transaction)
+    res.status(200).json({ response })
   } catch (e) {
-    console.log(e.toString());
+    res.status(500).json({ error: "Error processing request" })
   }
 })
+
+
+/*
+ * Error handling
+ */
 
 process.on('unhandledRejection', (reason, p) => {
   console.warn('Unhandled Rejection at: Promise', p, 'reason:', reason)
 })
 
+
+/*
+ * Listen
+ */
+
 app.listen(PORT, () => console.log('Neo node running on port ' + PORT))
-
-
-
-
-
-
-
