@@ -10,11 +10,18 @@ const app = express()
 const bodyParser = require('body-parser')
 const PORT = process.env.PORT || 7000;
 
+// Logging
+const winston = require('winston');
+const expressWinston = require('express-winston');
+const logConfig = require('./log.config')
+const logger = new winston.Logger(logConfig.regular)
+
 // Neo
 const neonjs = require('@cityofzion/neon-js')
 const Neon = neonjs.default
 const { tx } = Neon;
-const neoNodeURL = process.env.NEO_NODE_URL
+// const neoNodeURL = process.env.NEO_NODE_URL
+const neoNodeURL = 'http://pyrpc1.neeeo.org:10332'
 const client = Neon.create.rpcClient(neoNodeURL)
 
 
@@ -24,6 +31,9 @@ const client = Neon.create.rpcClient(neoNodeURL)
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
+
+// Log requests
+app.use(expressWinston.logger(logConfig.express));
 
 
 /*
@@ -35,6 +45,7 @@ app.get('/validate_address', async (req, res) => {
     const response = await client.validateAddress(req.query.address)
     res.status(200).json({ is_valid: response })
   } catch (e) {
+    logger.error(e);
     res.status(500).json({ error: e.toString() })
   }
 })
@@ -44,6 +55,7 @@ app.get('/block_height', async (req, res) => {
     const count = await client.getBlockCount()
     res.status(200).json({ block_height: count })
   } catch (e) {
+    logger.error(e);
     res.status(500).json({ error: e.toString() })
   }
 })
@@ -55,6 +67,7 @@ app.post('/test_invoke', async (req, res) => {
     const response = await client.invokeFunction(script_hash, operation, params)
     res.status(200).json({ response })
   } catch (e) {
+    logger.error(e);
     res.status(500).json({ error: e.toString() })
   }
 })
@@ -85,6 +98,7 @@ app.post('/send_transaction', async (req, res) => {
     const response = await client.sendRawTransaction(serializedTx)
     res.status(200).json({ message: "Not implemented yet, just returning sample tx data", tx, hash, serializedTx, response })
   } catch (e) {
+    logger.error(e);
     res.status(500).json({ error: e.toString() })
   }
 })
@@ -94,9 +108,18 @@ app.post('/send_transaction', async (req, res) => {
  * Error handling
  */
 
-process.on('unhandledRejection', (reason, p) => {
-  console.warn('Unhandled Rejection at: Promise', p, 'reason:', reason)
+app.use((err, req, res, next) => {
+  logger.error(err.stack)
+  next(err)
 })
+
+app.use((err, req, res, next) => {
+  res.status(500).render('error', { error: err })
+})
+
+process.on('unhandledRejection', (reason, p) => {
+  logger.error("Possibly Unhandled Rejection at: Promise ", p, " reason: ", reason);
+});
 
 
 /*
