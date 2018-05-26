@@ -12,6 +12,7 @@
     "@cityofzion/neo-js": "^0.8.1",
     "@cityofzion/neon-js": "^3.8.0",
     "body-parser": "^1.18.3",
+    "dotenv": "^5.0.1",
     "express": "^4.16.3"
   }
 }
