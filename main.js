@@ -23,15 +23,45 @@ const options = {
   }
 }
 
-const mainnetNeo = new Neo(options)
+const neo = new Neo(options)
 
-mainnetNeo.mesh.on('ready', () => {
-  app.get('/validate_address/:address', async (req, res) => {
+neo.mesh.on('ready', () => {
+  app.get('/validate_address', async (req, res) => {
     try {
-      await mainnetNeo.mesh.rpc('validateAddress', req.params.address)
-        .then((resNeo) => res.send(resNeo))
+      await neo.mesh.rpc('validateAddress', req.query.address)
+        .then((resNeo) => res.status(200).json(resNeo))
     } catch (e) {
       console.log(e.toString())
+    }
+  })
+
+  app.get('/block_height', async (req, res) => {
+    try {
+      await neo.mesh.rpc('getBlockCount')
+        .then((resNeo) => res.status(200).json({ block_height: resNeo }))
+    } catch (e) {
+      console.log(e.toString());
+    }
+  })
+
+  app.post('/test_invoke', async (req, res) => {
+    const { scriptHash, operation, params } = req
+
+    try {
+      await neo.mesh.rpc('invokeTransaction')
+        .then((resNeo) => res.status(200).json({ block_height: resNeo }))
+    } catch (e) {
+      console.log(e.toString());
+    }
+  })
+
+  app.post('/send_transaction', async (req, res) => {
+
+    try {
+      await neo.mesh.rpc('invokeTransaction')
+        .then((resNeo) => res.status(200).json({ block_height: resNeo }))
+    } catch (e) {
+      console.log(e.toString());
     }
   })
 
